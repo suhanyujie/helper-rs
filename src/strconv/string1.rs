@@ -60,7 +60,7 @@ impl<'a> StrStr<'a> {
         }
     }
 
-    // 
+    // https://www.php.net/strstr
     pub fn strstr(&self, search: &'a str) -> Option<&'a str> {
         if let Some(posi1) = self.ori_str.find(search) {
             let remain = &self.ori_str[posi1..];
