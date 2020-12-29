@@ -46,11 +46,42 @@ impl<'a> Iterator for StrSplit<'a> {
     }
 }
 
+#[derive(Debug)]
+struct StrStr<'a> {
+    ori_str: &'a str,
+    reminder: Option<&'a str>,
+}
+
+impl<'a> StrStr<'a> {
+    pub fn new(ori: &'a str) ->Self {
+        Self{
+            ori_str: ori,
+            reminder: None,
+        }
+    }
+
+    // 
+    pub fn strstr(&self, search: &'a str) -> Option<&'a str> {
+        if let Some(posi1) = self.ori_str.find(search) {
+            let remain = &self.ori_str[posi1..];
+            return Some(remain);
+        } else {
+            return None;
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
     use std::vec;
     use super::*;
+
+    #[test]
+    fn test_strstr() {
+        let ori = "hello world...";
+        assert_eq!(StrStr::new(ori).strstr("world"), Some("world..."));
+    }
 
     #[test]
     fn it_works() {
