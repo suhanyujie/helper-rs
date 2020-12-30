@@ -1,16 +1,15 @@
 //! 字符串处理
 #![warn(missing_debug_implementations, rust_2018_idioms, missing_docs)]
 
-use std::ops::RemAssign;
-
+/// 将分隔符 delimiter 抽象成 D，需要其实现 find_next 方法。
 #[derive(Debug)]
-pub struct StrSplit<'a> {
-    remainder: Option<&'a str>,
-    delimiter: &'a str,
+pub struct StrSplit<'haystack, D> {
+    remainder: Option<&'haystack str>,
+    delimiter: D,
 }
 
-impl<'a> StrSplit<'a> {
-    pub fn new(haystack: &'a str, delimiter: &'a str) -> Self {
+impl<'haystack, D> StrSplit<'haystack, D> {
+    pub fn new(haystack: &'haystack str, delimiter: D) -> Self {
         Self {
             remainder: Some(haystack),
             delimiter,
@@ -18,34 +17,42 @@ impl<'a> StrSplit<'a> {
     }
 }
 
-impl<'a> Iterator for StrSplit<'a> {
-    type Item = &'a str;
+pub trait Delimiter {
+    fn find_next(&self, s: &str) -> Option<(usize, usize)>;
+}
+
+impl Delimiter for &str {
+    fn find_next(&self, s: &str) -> Option<(usize, usize)> {
+        s.find(self).map(|start| (start, start + self.len()))
+    }
+}
+
+impl Delimiter for char {
+    fn find_next(&self, s: &str) -> Option<(usize, usize)> {
+        s.char_indices().find(|(_, c)| c == self).map(|(start, c)| (start, start + c.len_utf8()))
+    }
+}
+
+impl<'haystack, D> Iterator for StrSplit<'haystack, D>
+where
+    D: Delimiter
+{
+    type Item = &'haystack str;
     fn next(&mut self) -> Option<Self::Item> {
         let remainder = self.remainder.as_mut()?;
         // let remainder /* &mut &str */= &mut self.remainder?;
-        if let Some(next_delim) = remainder.find(self.delimiter) {
-            let until_delimiter = &remainder[..next_delim];
-            *remainder = &remainder[(next_delim + self.delimiter.len())..];
+        if let Some((delim_start, delim_end)) = self.delimiter.find_next(remainder) {
+            let until_delimiter = &remainder[..delim_start];
+            *remainder = &remainder[delim_end..];
             Some(until_delimiter)
         } else {
             self.remainder.take()
         }
-
-        // if let Some(next_delim) = self.remainder.find(self.delimiter) {
-        //     let until_delimiter = &self.remainder[..next_delim];
-        //     self.remainder = &self.remainder[(next_delim + self.delimiter.len())..];
-        //     Some(until_delimiter)
-        // } else if self.remainder.is_empty() {
-        //     // todo fix bug
-        //     None
-        // } else {
-        //     let rest = self.remainder;
-        //     self.remainder = "";
-        //     Some(rest)
-        // }
     }
 }
 
+
+/// https://www.php.net/strstr
 #[derive(Debug)]
 struct StrStr<'a> {
     ori_str: &'a str,
@@ -60,7 +67,6 @@ impl<'a> StrStr<'a> {
         }
     }
 
-    // https://www.php.net/strstr
     pub fn strstr(&self, search: &'a str) -> Option<&'a str> {
         if let Some(posi1) = self.ori_str.find(search) {
             let remain = &self.ori_str[posi1..];
@@ -88,5 +94,14 @@ mod tests {
         let haystack = "a b c d ef";
         let letters: Vec<&str> = StrSplit::new(haystack, " ").collect();
         assert_eq!(letters, vec!["a", "b", "c", "d", "ef"]);
+    }
+
+    // 测试字符迭代器的一些方法。
+    #[test]
+    fn test_char_iter1() {
+        let s1 = "hello world";
+        // find 之后，会将前面传递过来的值，直接往下传递。
+        let res = s1.char_indices().find(|(index, c)| c == &'o').map(|pre_val| pre_val).unwrap_or((1, '0'));
+        println!("{:?}", res);
     }
 }
