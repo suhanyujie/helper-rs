@@ -96,6 +96,13 @@ mod tests {
         assert_eq!(letters, vec!["a", "b", "c", "d", "ef"]);
     }
 
+    #[test]
+    fn test_split_by_char() {
+        let haystack = "a b c d ef e ";
+        let letters: Vec<&str> = StrSplit::new(haystack, 'e').collect();
+        assert_eq!(letters, vec!["a b c d ", "f ", " "]);
+    }
+
     // 测试字符迭代器的一些方法。
     #[test]
     fn test_char_iter1() {
