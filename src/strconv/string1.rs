@@ -51,6 +51,9 @@ where
     }
 }
 
+// 自定义类型的数组相关 todo  in_array 
+
+
 
 /// https://www.php.net/strstr
 #[derive(Debug)]
@@ -110,5 +113,15 @@ mod tests {
         // find 之后，会将前面传递过来的值，直接往下传递。
         let res = s1.char_indices().find(|(index, c)| c == &'o').map(|pre_val| pre_val).unwrap_or((1, '0'));
         println!("{:?}", res);
+    }
+
+    #[test]
+    fn test_in_array() {
+        let str_arr = vec!["abc", "b", "hello world", "who"];
+        assert!(!str_arr.contains(&"bcd"));
+        assert!(str_arr.contains(&"abc"));
+        // 包含 `hello world` 的元素，但不包含 `hello` 的元素。
+        assert!(!str_arr.contains(&"hello"));
+        assert!(str_arr.contains(&"who"));
     }
 }
